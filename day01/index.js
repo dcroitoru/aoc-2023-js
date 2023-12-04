@@ -1,8 +1,8 @@
-import { getDirName, readInput } from "../shared/index.js";
+import { getDirName, readInput, sum } from "../shared/index.js";
 
 const __dirname = getDirName(import.meta.url);
 const input = readInput(__dirname, "input.txt");
-const sum = (a, b) => a + b;
+
 const numbers = (str = "") => str.split("").filter((a) => parseInt(a));
 const calibrationNum = (arr) => arr[0] + arr[arr.length - 1];
 
@@ -52,3 +52,5 @@ const solve2 = (input = "") => {
 
 console.log("::part1 =>", solve1(input));
 console.log("::part2 =>", solve2(input));
+// ::part1 => 56397
+// ::part2 => 55701
