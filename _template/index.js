@@ -1,7 +1,7 @@
 import { getDirName, readInput } from "../shared/index.js";
 
-// const inputFileName = "test-input.txt";
-const inputFileName = "input.txt";
+const inputFileName = "test-input.txt";
+// const inputFileName = "input.txt";
 const __dirname = getDirName(import.meta.url);
 const input = readInput(__dirname, inputFileName);
 

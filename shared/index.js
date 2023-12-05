@@ -10,6 +10,9 @@ export const readInput = (dirName, fileName = "input.txt") =>
   });
 
 export const sum = (a, b) => a + b;
+export const prod = (a, b) => a * b;
+export const clamp = (val, min, max) =>
+  val < min ? min : val > max ? max : val;
 
 const createKV = ([key, value]) => ({ [key]: value });
 
