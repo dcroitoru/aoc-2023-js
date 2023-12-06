@@ -25,3 +25,13 @@ export const normalize = (rows = []) =>
 //   [2, { b: 2 }],
 // ]; // => { '1': { a: '1' }, '2': { b: 2 } }
 // console.log(normalize(normTest));
+
+export const withLog =
+  (fn) =>
+  (...rest) => {
+    const ret = fn(...rest);
+    console.log(rest[0], rest[1] || "", "=>", ret);
+    return ret;
+  };
+
+export const Log = (val) => console.dir(val, { depth: null });

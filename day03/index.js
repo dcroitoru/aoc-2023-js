@@ -1,4 +1,11 @@
-import { getDirName, prod, readInput, sum } from "../shared/index.js";
+import {
+  Log,
+  getDirName,
+  prod,
+  readInput,
+  sum,
+  withLog,
+} from "../shared/index.js";
 
 // const inputFileName = "test-input.txt";
 // const inputFileName = "test-input2.txt";
@@ -7,12 +14,14 @@ const __dirname = getDirName(import.meta.url);
 const input = readInput(__dirname, inputFileName);
 
 const digitsRegex = /[0-9]+/g;
-const specialRegex = /[\$\*\#\+\@\&\/\%\=\-]/g;
+const specialRegex = /[\*\$\#\+\@\&\/\%\=\-]/;
+
+console.log(specialRegex.test("*"));
 
 const createRange = (a, b) =>
   Array.from(Array(Math.abs(a - b) + 1).keys()).map((v) => v + a);
 
-const createWindow = (x0, x1, y0, y1) => {
+const createWindow = ([x0, y0, x1, y1]) => {
   const xr = createRange(x0, x1);
   const yr = createRange(y0 + 1, y1 - 1);
   return [
@@ -23,6 +32,7 @@ const createWindow = (x0, x1, y0, y1) => {
   ].flat();
 };
 
+// not used
 const fill =
   (str = "") =>
   (pos) => {
@@ -39,44 +49,47 @@ const fill =
     return num;
   };
 
+const getNumbers = (str, y) =>
+  [...str.matchAll(digitsRegex)].map((match) => [match[0], [match.index, y]]);
+
+const getBounds = ([x, y], len) => [x - 1, y - 1, x + len, y + 1];
+
+const filterCoord =
+  ([maxX, maxY]) =>
+  ([x, y]) =>
+    0 <= x && x <= maxX && 0 <= y && y <= maxY;
+const getChars = (matrix) => (coords) => coords.map(([x, y]) => matrix[y][x]);
+const getCharsWithPos = (matrix) => (coords) =>
+  coords.map(([x, y]) => [matrix[y][x], [x, y]]);
+
 const solve1 = (input = "") => {
   const rows = input.split("\n");
-  const rowsAsMatrix = rows.map((row) => row.split(""));
   const maxX = rows[0].length - 1;
   const maxY = rows.length - 1;
 
-  const matchedRows = rows.map((row) => [...row.matchAll(digitsRegex)]);
-  const norm = matchedRows.map((row, y) =>
-    row.map((group) => [
-      group[0],
-      group.index - 1,
-      group.index + group[0].length,
-      y - 1,
-      y + 1,
-    ])
-  );
+  // should get all numbers and their indices
+  const numbers = rows.map(getNumbers).flat();
 
-  const windows = norm.flat().map(([id, x0, x1, y0, y1]) => {
-    return [
-      id,
-      createWindow(x0, x1, y0, y1)
-        .filter(([x, y]) => 0 <= x && x <= maxX && 0 <= y && y <= maxY)
-        .map(([x, y]) => rowsAsMatrix[y][x])
-        .join("")
-        .match(specialRegex),
-    ];
-  });
+  // should get bounds around a number
+  const bounds = numbers.map(([num, xy]) => [num, getBounds(xy, num.length)]);
 
-  const filteredNumbers = windows
-    .filter(([_, char]) => char !== null)
-    .map(([id]) => +id);
+  // should get actual coords along the bounds (windows)
+  const windows = bounds.map(([num, bounds]) => [
+    num,
+    createWindow(bounds).filter(filterCoord([maxX, maxY])),
+  ]);
 
-  const filteredNumbersSum = filteredNumbers.reduce(sum);
+  // should get numbers with special chars
+  const numbersWithSpecials = windows
+    .map(([num, window]) => [num, getChars(rows)(window).join("")])
+    .filter(([_, chars]) => specialRegex.test(chars))
+    .map(([num]) => +num);
 
-  return filteredNumbersSum;
+  const numbersSum = numbersWithSpecials.reduce(sum);
+  return numbersSum;
 };
 
-const solve2 = (input = "") => {
+const solve2_ = (input = "") => {
   const rows = input.split("\n");
   const maxX = rows[0].length - 1;
   const maxY = rows.length - 1;
@@ -92,14 +105,7 @@ const solve2 = (input = "") => {
     const window = createWindow(x - 1, x + 1, y - 1, y + 1).filter(
       ([x, y]) => 0 <= x && x <= maxX && 0 <= y && y <= maxY
     );
-
-    // console.log(
-    //   char,
-    //   window.map(([x, y]) => [x, y, rows[y][x]])
-    // );
-
     const values = window.filter(([x, y]) => !isNaN(rows[y][x]));
-
     return values;
   });
 
@@ -109,6 +115,57 @@ const solve2 = (input = "") => {
 
   const result = numbers.map((num) => num.reduce(prod, 1)).reduce(sum);
   return result;
+};
+
+const solve2 = (input = "") => {
+  const rows = input.split("\n");
+  const maxX = rows[0].length - 1;
+  const maxY = rows.length - 1;
+
+  // should get all numbers and their indices
+  const numbers = rows.map(getNumbers).flat();
+
+  // should get bounds around a number
+  const bounds = numbers.map(([num, xy]) => [num, getBounds(xy, num.length)]);
+
+  // should get actual coords along the bounds (windows)
+  const windows = bounds.map(([num, bounds]) => [
+    num,
+    createWindow(bounds).filter(filterCoord([maxX, maxY])),
+  ]);
+
+  // should get gear positions
+  const gearsPos = windows
+    .map(([num, window]) => [
+      num,
+      getCharsWithPos(rows)(window).filter(([char]) => char === "*"),
+    ])
+    .filter(([_, gears]) => gears.length > 0)
+    .map(([num, gears]) => [num, gears.map(([_, pos]) => pos.join("-"))]);
+
+  // should get gear sets
+  const gearsSet = gearsPos.reduce((acc, [num, positions = []]) => {
+    positions.forEach((pos) => {
+      acc[pos] = acc[pos] || [];
+      acc[pos].push(num);
+    });
+
+    return acc;
+  }, {});
+
+  // should filter out gears with 2 numbers
+  for (let kv in gearsSet) {
+    if (gearsSet[kv].length != 2) {
+      delete gearsSet[kv];
+    }
+  }
+
+  // should calc gear ratio (sum of all products)
+  const gearRatio = Object.values(gearsSet)
+    .map((numbers) => numbers.map((num) => +num).reduce(prod, 1))
+    .reduce(sum);
+
+  return gearRatio;
 };
 
 console.log("::part1 =>", solve1(input));
