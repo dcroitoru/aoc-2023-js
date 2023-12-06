@@ -35,3 +35,6 @@ export const withLog =
   };
 
 export const Log = (val) => console.dir(val, { depth: null });
+
+export const createRange = (a, b) =>
+  Array.from(Array(Math.abs(a - b) + 1).keys()).map((v) => v + a);
