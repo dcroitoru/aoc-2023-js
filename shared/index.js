@@ -73,3 +73,5 @@ export const chunkify = (arr, chunkSize = 2) => {
   }
   return chunks;
 };
+
+export const zip = (rows) => rows[0].map((_, c) => rows.map((row) => row[c]));
