@@ -82,3 +82,7 @@ export const groupCount = (acc, cur) => {
   const val = acc[cur] || 0;
   return { ...acc, [cur]: val + 1 };
 };
+
+const gcd = (a, b) => (b == 0 ? a : gcd(b, a % b));
+const lcm = (a, b) => (a / gcd(a, b)) * b;
+export const lcmArr = (ns) => ns.reduce(lcm, 1);
