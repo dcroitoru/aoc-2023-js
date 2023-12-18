@@ -9,6 +9,7 @@ export const readInput = (dirName, fileName = "input.txt") =>
     encoding: "utf-8",
   });
 
+export const dif = (a, b) => b - a;
 export const sum = (a, b) => a + b;
 export const prod = (a, b) => a * b;
 export const clamp = (val, min, max) =>
