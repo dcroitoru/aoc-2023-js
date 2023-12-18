@@ -20,12 +20,6 @@ const createKV = ([key, value]) => ({ [key]: value });
 export const normalize = (rows = []) =>
   rows.reduce((acc, cur) => ({ ...acc, ...createKV(cur) }), {});
 
-// const normTest = [
-//   [1, { a: "1" }],
-//   [2, { b: 2 }],
-// ]; // => { '1': { a: '1' }, '2': { b: 2 } }
-// console.log(normalize(normTest));
-
 export const withLog =
   (fn) =>
   (...rest) => {
@@ -65,6 +59,8 @@ export const min = (arr = []) => {
   return min;
 };
 
+export const max = (arr = []) => Math.max.apply(Math, arr);
+
 export const chunkify = (arr, chunkSize = 2) => {
   const chunks = [];
   for (let i = 0; i < arr.length; i += chunkSize) {
@@ -75,3 +71,14 @@ export const chunkify = (arr, chunkSize = 2) => {
 };
 
 export const zip = (rows) => rows[0].map((_, c) => rows.map((row) => row[c]));
+
+export const groupBy = (arr = [], fn) =>
+  arr.reduce((acc, cur) => {
+    const field = fn(cur);
+    const val = acc[field] || [];
+    return { ...acc, [field]: [...val, cur] };
+  }, {});
+export const groupCount = (acc, cur) => {
+  const val = acc[cur] || 0;
+  return { ...acc, [cur]: val + 1 };
+};
