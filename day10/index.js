@@ -1,7 +1,7 @@
 import { getDirName, readInput } from "../shared/index.js";
 
-const inputFileName = "test-input.txt";
-// const inputFileName = "input.txt";
+// const inputFileName = "test-input.txt";
+const inputFileName = "input.txt";
 const __dirname = getDirName(import.meta.url);
 const input = readInput(__dirname, inputFileName);
 
@@ -97,140 +97,71 @@ const set = (mat, [x, y], val) => {
   //   console.log(mat);
 };
 
-const process = (source, target, [x, y], count = 0) => {
-  console.log("should process", x, y);
-
-  // if (count >= 500) return;
-
-//   count++;
-
+const process = (source, startPos, count = 0) => {
   const size = source.length - 1;
-  const sval = get(source, [x, y]);
-  const tval = get(target, [x, y]);
+  let maxCount = 0;
+  //   const sval = get(source, [x, y]);
 
-  // right
-  if (x < size) {
-    const nextPos = [x + 1, y];
-    const sr = get(source, nextPos);
-    const tr = get(target, nextPos);
-    if (canTravelRight(sval, sr) && tr == 0) {
-      set(target, nextPos, tval + 1);
-      process(source, target, nextPos, count);
+  const queue = [[startPos, count]];
+
+  while (queue.length > 0) {
+    const [pos, count] = queue.shift(0);
+    const [x, y] = pos;
+    const sval = get(source, pos);
+    if (count > maxCount) maxCount = count;
+
+    if (typeof sval == "number") continue;
+
+    set(source, pos, count);
+    // right
+    if (x < size) {
+      const nextPos = [x + 1, y];
+      const sr = get(source, nextPos);
+      if (canTravelRight(sval, sr)) {
+        queue.push([nextPos, count + 1]);
+      }
+    }
+
+    // bottom
+    if (y < size) {
+      const nextPos = [x, y + 1];
+      const sr = get(source, nextPos);
+      if (canTravelBottom(sval, sr)) {
+        queue.push([nextPos, count + 1]);
+      }
+    }
+
+    // left
+    if (x > 0) {
+      const nextPos = [x - 1, y];
+      const sr = get(source, nextPos);
+      if (canTravelLeft(sval, sr)) {
+        queue.push([nextPos, count + 1]);
+      }
+    }
+
+    // top
+    if (y > 0) {
+      const nextPos = [x, y - 1];
+      const sr = get(source, nextPos);
+      if (canTravelTop(sval, sr)) {
+        queue.push([nextPos, count + 1]);
+      }
     }
   }
 
-  // bottom
-  if (y < size) {
-    const nextPos = [x, y + 1];
-    const sr = get(source, nextPos);
-    const tr = get(target, nextPos);
-    if (canTravelBottom(sval, sr) && tr == 0) {
-      set(target, nextPos, tval + 1);
-      process(source, target, nextPos, count);
-    }
-  }
-
-  // left
-  if (x > 0) {
-    const nextPos = [x - 1, y];
-    const sr = get(source, nextPos);
-    const tr = get(target, nextPos);
-    if (canTravelLeft(sval, sr) && tr == 0) {
-      set(target, nextPos, tval + 1);
-      process(source, target, nextPos, count);
-    }
-  }
-
-  // top
-  if (y > 0) {
-    const nextPos = [x, y - 1];
-    const sr = get(source, nextPos);
-    const tr = get(target, nextPos);
-    if (canTravelTop(sval, sr) && tr == 0) {
-      set(target, nextPos, tval + 1);
-      process(source, target, nextPos, count);
-    }
-  }
-
-  // bottom
+  console.log(maxCount);
 };
-const directions = [
-  [-1, 0],
-  [1, 0],
-  [0, -1],
-  [0, 1],
-];
-
-// const fill = (source, pos, count = 0) => {
-//   let queue = [{ pos, count }];
-
-//   while (queue.length > 0) {
-//     const current = queue.shift(0);
-
-//     for (let i = 0; i < directions.length; i++) {
-//         const newPos =
-//       let child = {
-//         x: current.x + directions[i][0],
-//         y: current.y + directions[i][1],
-//         colour,
-//       };
-//       if (isValidSquare(child.x, child.y, child.colour)) {
-//         grid[child.x][child.y] = "#367588";
-//         queue.push(child);
-//       }
-//     }
-//   }
-// };
-
-// const floodFill = (image, pos, count = 0) => {
-//   const size = image.length;
-//   const queue = [{ pos, count }];
-//   while (queue.length > 0) {
-//     const { pos, count } = queue.shift(0);
-
-//     console.log(image, pos, count);
-//     const val = get(image, pos);
-
-//     set(image, pos, count);
-
-//     for (const dir of directions) {
-//       const x = pos[0] + dir[0];
-//       const y = pos[1] + dir[1];
-//       if (x < 0 || x >= size || y < 0 || y >= size) continue;
-//       queue.push({ pos: [x, y], count: count + 1 });
-//     }
-//   }
-// };
 
 const solve1 = (input = "") => {
-  console.log(input);
-
   const rows = input.split("\n").map((row) => row.split(""));
-
-  const height = rows.length;
-  const width = rows[0].length;
-
   const startPos = getStartPos(rows);
-  //   const [x, y] = startPos;
 
-  //   const out = [];
-  //   for (let cols = 0; cols < height; cols++) {
-  //     out[cols] = [];
-  //     for (let rows = 0; rows < width; rows++) {
-  //       out[cols][rows] = 0;
-  //     }
-  //   }
-
-  //   set(out, [x, y], 1);
-  //   process(rows, out, startPos, 0);
-
-  floodFill(rows, startPos);
-
-  console.log(rows);
+  process(rows, startPos);
 };
 const solve2 = (input = "") => {};
 
 console.log("::part1 =>", solve1(input));
-// ::part1 =>
+// ::part1 => 6815
 console.log("::part2 =>", solve2(input));
 // ::part2 =>
