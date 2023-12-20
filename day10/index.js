@@ -1,7 +1,11 @@
 import { getDirName, readInput } from "../shared/index.js";
 
-// const inputFileName = "test-input.txt";
 const inputFileName = "input.txt";
+// const inputFileName = "test-input.txt";
+// const inputFileName = "test-input2.txt";
+// const inputFileName = "test-input3.txt";
+// const inputFileName = "test-input4.txt";
+// const inputFileName = "test-input5.txt";
 const __dirname = getDirName(import.meta.url);
 const input = readInput(__dirname, inputFileName);
 
@@ -14,6 +18,30 @@ const getStartPos = (matrix) => {
   );
 
   return pos;
+};
+
+const canConnectFrom = {
+  R: "-7JS",
+  L: "-FLS",
+  T: "|7FS",
+  B: "|JLS",
+};
+
+const dirMap = {
+  R: [1, 0], // right
+  L: [-1, 0], // left
+  B: [0, 1], // bottom
+  T: [0, -1], // top
+};
+
+const dirSymbolMap = {
+  "-": ["R", "L"],
+  "|": ["T", "B"],
+  7: ["L", "B"],
+  F: ["R", "B"],
+  L: ["R", "T"],
+  J: ["L", "T"],
+  S: ["R", "B", "L", "T"],
 };
 
 const symbols = {
@@ -100,7 +128,6 @@ const set = (mat, [x, y], val) => {
 const process = (source, startPos, count = 0) => {
   const size = source.length - 1;
   let maxCount = 0;
-  //   const sval = get(source, [x, y]);
 
   const queue = [[startPos, count]];
 
@@ -110,13 +137,18 @@ const process = (source, startPos, count = 0) => {
     const sval = get(source, pos);
     if (count > maxCount) maxCount = count;
 
-    if (typeof sval == "number") continue;
+    if (sval === "*") continue;
 
-    set(source, pos, count);
+    // console.log(source.map((row) => row.join("")).join("\n"));
+
+    set(source, pos, "*");
     // right
     if (x < size) {
       const nextPos = [x + 1, y];
       const sr = get(source, nextPos);
+
+      //   console.log(sval, sr, canTravelRight(sval, sr));
+
       if (canTravelRight(sval, sr)) {
         queue.push([nextPos, count + 1]);
       }
@@ -150,18 +182,186 @@ const process = (source, startPos, count = 0) => {
     }
   }
 
-  console.log(maxCount);
+  return maxCount;
 };
 
-const solve1 = (input = "") => {
+function delay(time) {
+  return new Promise((resolve) => setTimeout(resolve, time));
+}
+
+const floodFillPipes = async (image, startPos, color = "*") => {
+  const h = image.length;
+  const w = image[0].length;
+  const queue = [startPos];
+
+  while (queue.length > 0) {
+    const pos = queue.shift();
+    const [x, y] = pos;
+    const old = get(image, pos);
+
+    if (old === ".") continue;
+    if (old === color) continue;
+
+    set(image, pos, color);
+
+    const dirs = dirSymbolMap[old];
+    for (let dir of dirs) {
+      const newPos = [x + dirMap[dir][0], y + dirMap[dir][1]];
+      const [xx, yy] = newPos;
+      if (xx < 0 || xx >= w || yy < 0 || yy >= h) {
+        continue;
+      }
+
+      const newVal = get(image, newPos);
+      if (!canConnectFrom[dir].includes(newVal)) {
+        continue;
+      }
+
+      queue.push(newPos);
+    }
+
+    // await delay(50);
+
+    // console.log("queue.length", queue.length);
+    // console.clear();
+    // console.log(image.map((row) => row.join("")).join("\n"));
+  }
+
+  //   console.log(image.map((row) => row.join("")).join("\n"));
+  return image;
+};
+
+const floodFill = async (image, startPos, color = "x", edge = ["*"]) => {
+  const h = image.length;
+  const w = image[0].length;
+  const queue = [startPos];
+
+  while (queue.length > 0) {
+    const pos = queue.shift();
+    const [x, y] = pos;
+    const old = get(image, pos);
+
+    if (old === color) continue;
+    if (edge.includes(old)) continue;
+
+    set(image, pos, color);
+
+    for (let dir of Object.keys(dirMap)) {
+      const newPos = [x + dirMap[dir][0], y + dirMap[dir][1]];
+      const [xx, yy] = newPos;
+      if (xx < 0 || xx >= w || yy < 0 || yy >= h) {
+        continue;
+      }
+      queue.push(newPos);
+    }
+
+    // await delay(20);
+
+    // console.log("queue.length", queue.length);
+    // console.clear();
+    // console.log(image.map((row) => row.join("")).join("\n"));
+  }
+
+  //   console.log(image.map((row) => row.join("")).join("\n"));
+  return image;
+};
+
+const expandPipes = (image = []) => {
+  const cols = image.length;
+  const rows = image[0].length;
+
+  const newImage = image.map((row) => {
+    const newRow = row
+      .map((cell, i) => (i == 0 ? ["_", cell, "_"] : [cell, "_"]))
+      .flat();
+
+    const newNewRow = newRow.map((cell, i) => {
+      if (i > 0 && i < newRow.length - 1) {
+        const l = newRow[i - 1];
+        const r = newRow[i + 1];
+        if (canConnectFrom.L.includes(l) && canConnectFrom.R.includes(r))
+          return "-";
+      }
+
+      return cell;
+    });
+
+    return newNewRow.map((cell) => (cell == "_" ? "." : cell));
+  });
+
+  const newNewImage = newImage
+    .map((row, i) => {
+      const newRow = new Array(row.length).fill("_");
+      if (i == 0) return [newRow, row, newRow];
+      return [row, newRow];
+    })
+    .flat();
+  const newNewNewImage = newNewImage
+    .map((row, y) => {
+      if (y > 0 && y < newNewImage.length - 1 && y % 2 == 0) {
+        return row.map((cell, x) => {
+          const t = get(newNewImage, [x, y - 1]);
+          const b = get(newNewImage, [x, y + 1]);
+          if (canConnectFrom.T.includes(t) && canConnectFrom.B.includes(b))
+            return "|";
+          return cell;
+        });
+      }
+      return row;
+    })
+    .map((row) => row.map((cell) => (cell == "_" ? "." : cell)));
+
+  return newNewNewImage;
+};
+
+const solve1 = async (input = "") => {
+  // TODO: redo solution for part1 (lost in commits)
+};
+
+const solve2 = async (input = "") => {
   const rows = input.split("\n").map((row) => row.split(""));
-  const startPos = getStartPos(rows);
 
-  process(rows, startPos);
+  // expand pipes
+  const image = expandPipes(rows);
+  const startPos = getStartPos(image);
+
+  // console.log("image", image);
+  //   console.log(image.map((row) => row.join("")).join("\n"));
+
+  await floodFillPipes(image, startPos);
+  await floodFill(image, [0, 0], "x", ["*"]);
+
+  for (let col in image) {
+    for (let row in image[col]) {
+      const pos = [+row, +col];
+      await floodFill(image, pos, "o", ["*", "x"]);
+    }
+  }
+
+  //   console.log("\n\n==============================================");
+  //   console.log(image.map((row) => row.join("")).join("\n"));
+
+  const even = (_, i) => i % 2 == 0;
+  const odd = (_, i) => i % 2 == 1;
+
+  //   console.log("\n\n==============================================");
+  //   console.log(
+  //     image
+  //       .filter(odd)
+  //       .map((row) => row.filter(odd).join(""))
+  //       .join("\n")
+  //   );
+
+  const count = image
+    .filter(odd)
+    .map((row) => row.filter(odd).filter((cell) => cell == "o"))
+    .flat()
+    .join("").length;
+
+  return count;
 };
-const solve2 = (input = "") => {};
 
 console.log("::part1 =>", solve1(input));
 // ::part1 => 6815
-console.log("::part2 =>", solve2(input));
-// ::part2 =>
+console.log("::part2 =>", await solve2(input));
+// ::part2 => 269
