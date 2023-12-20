@@ -87,3 +87,14 @@ export const groupCount = (acc, cur) => {
 const gcd = (a, b) => (b == 0 ? a : gcd(b, a % b));
 const lcm = (a, b) => (a / gcd(a, b)) * b;
 export const lcmArr = (ns) => ns.reduce(lcm, 1);
+
+export const logMatrix = (matrix) =>
+  console.log(matrix.map((row) => row.join("")).join("\n"));
+
+export const createPairs = (list) =>
+  list.reduce(
+    (acc, item, i, arr) =>
+      acc.concat(arr.slice(i + 1).map((_item) => [item, _item])),
+
+    []
+  );
