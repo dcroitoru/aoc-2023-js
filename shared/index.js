@@ -98,3 +98,9 @@ export const createPairs = (list) =>
 
     []
   );
+
+export const arraysEqual = (a, b) =>
+  a.length === b.length && a.every((element, index) => element === b[index]);
+
+const factorial = (n) => (n == 0 ? 1 : n * factorial(n - 1));
+const arrangements = (n, k) => factorial(n) / factorial(n - k);
