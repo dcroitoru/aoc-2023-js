@@ -104,3 +104,6 @@ export const arraysEqual = (a, b) =>
 
 const factorial = (n) => (n == 0 ? 1 : n * factorial(n - 1));
 const arrangements = (n, k) => factorial(n) / factorial(n - k);
+
+export const transpose = (matrix) =>
+  matrix[0].map((_, i) => matrix.map((row) => row[i]));
