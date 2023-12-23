@@ -107,3 +107,11 @@ const arrangements = (n, k) => factorial(n) / factorial(n - k);
 
 export const transpose = (matrix) =>
   matrix[0].map((_, i) => matrix.map((row) => row[i]));
+
+export const get = (mat, [x, y]) => mat[y][x];
+export const set = (mat, [x, y], val) => (mat[y][x] = val);
+export const delay = (time) =>
+  new Promise((resolve) => setTimeout(resolve, time));
+
+export const createMatrix = (w, h, fillWith) =>
+  new Array(h).fill("").map(() => new Array(w).fill(fillWith));
