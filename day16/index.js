@@ -1,5 +1,7 @@
 import {
   createMatrix,
+  createRange,
+  createRangeLen,
   delay,
   get,
   getDirName,
@@ -82,9 +84,42 @@ const solve1 = (input = "") => {
 
   return score;
 };
-const solve2 = (input = "") => {};
+const solve2 = (input = "") => {
+  const rows = input.split("\n").map((row) => row.split(""));
+  const h = rows.length;
+  const w = rows[0].length;
+
+  const hor = createRangeLen(0, w);
+  const vert = createRangeLen(0, h);
+  const top = hor.map((x) => [x, 0]);
+  const bot = hor.map((x) => [x, h - 1]);
+  const left = vert.map((y) => [0, y]);
+  const right = vert.map((y) => [w - 1, y]);
+  const combinations = [
+    [top, [0, 1]], // ^
+    [bot, [0, -1]], // v
+    [left, [1, 0]], // >
+    [right, [-1, 0]], // <
+  ];
+  let max = 0;
+  const scores = combinations.map(([posArr, dir]) =>
+    posArr.map((pos) => {
+      const visited = createMatrix(w, h, "0");
+      beam(rows, pos, dir, visited);
+      const score = visited
+        .map((row) => row.filter((v) => v != "0").length)
+        .reduce(sum);
+
+      if (score > max) max = score;
+
+      return score;
+    })
+  );
+
+  return max;
+};
 
 console.log("::part1 =>", solve1(input));
 // ::part1 => 7496
 console.log("::part2 =>", solve2(input));
-// ::part2 =>
+// ::part2 => 7932
