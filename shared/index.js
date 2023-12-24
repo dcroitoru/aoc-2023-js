@@ -115,3 +115,5 @@ export const delay = (time) =>
 
 export const createMatrix = (w, h, fillWith) =>
   new Array(h).fill("").map(() => new Array(w).fill(fillWith));
+
+export const addArr = (a) => (b) => a.map((_, i) => a[i] + b[i]);
